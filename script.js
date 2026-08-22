@@ -22,7 +22,7 @@ document.querySelectorAll('.store-buy').forEach(button => button.addEventListene
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Não foi possível gerar o Pix.');
-    result.innerHTML = `<strong>Pix criado!</strong><p>Copie o código abaixo para pagar:</p><textarea readonly>${data.qrCode || ''}</textarea>`;
+    result.innerHTML = `<strong>Pix criado!</strong><p>Aponte o app do banco para o QR Code ou copie o código abaixo:</p><img class="pix-qr-code" src="data:image/png;base64,${data.qrCodeBase64 || ''}" alt="QR Code para pagamento Pix"><textarea readonly>${data.qrCode || ''}</textarea>`;
   } catch (error) {
     result.textContent = error.message;
   }
