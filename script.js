@@ -15,7 +15,7 @@ function renderRanking(elementId, entries, emptyMessage, guildRanking = false) {
     return;
   }
   container.innerHTML = entries.map((entry, index) => {
-    const details = guildRanking ? `Guilda: ${entry.name}` : `${entry.wins || 0} vitórias PvP · Guilda: ${entry.guild || 'Sem guilda'}`;
+    const details = guildRanking ? `Líder: ${entry.leader || 'Não informado'} · Forte: ${entry.fort || 'Nenhum forte'}` : `${entry.wins || 0} vitórias PvP · Guilda: ${entry.guild || 'Sem guilda'}`;
     return `<div class="ranking-row ranking-row-${index + 1}"><b>${String(index + 1).padStart(2, '0')}</b><span>${guildRanking ? entry.name : entry.player || entry.name}</span><strong>${entry.score || 0} pts</strong><small>${details}</small></div>`;
   }).join('');
 }
