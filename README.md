@@ -10,9 +10,9 @@ O site agora também pode ser executado pelo backend Node.js deste diretório. N
 - **Start Command:** `npm start`
 - **Root Directory:** `site` (se o repositório tiver outras pastas)
 
-Em **Environment**, adicione as variáveis `MP_ACCESS_TOKEN` e `PUBLIC_URL`. Use como `PUBLIC_URL` a URL HTTPS fornecida pelo Render, sem barra no final. Nunca publique o token no GitHub ou em arquivos do site.
+Em **Environment**, adicione `MP_ACCESS_TOKEN`, `PUBLIC_URL` e `GAME_SYNC_TOKEN`. Crie uma senha longa e aleatória para `GAME_SYNC_TOKEN`; ela será usada somente pelo servidor do jogo para consultar recompensas. Use como `PUBLIC_URL` a URL HTTPS fornecida pelo Render, sem barra no final. Nunca publique tokens no GitHub ou em arquivos do site.
 
-O endpoint de webhook usado pelo pagamento é `https://seu-dominio/api/webhook`. O webhook apenas confirma o pagamento nesta primeira etapa; a entrega do gift no servidor do jogo ainda precisa ser ligada à fila de recompensas.
+O endpoint de webhook usado pelo pagamento é `https://seu-dominio/api/webhook`. O servidor do jogo consulta recompensas pendentes em `GET /api/rewards` enviando o cabeçalho `x-game-token`. A entrega e a confirmação de processamento no servidor do jogo ainda precisam ser ligadas à fila.
 
 ## Antes de publicar
 

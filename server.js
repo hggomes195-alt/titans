@@ -1,4 +1,6 @@
 import crypto from 'node:crypto';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 import express from 'express';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 
@@ -6,6 +8,8 @@ const app = express();
 const port = process.env.PORT || 3000;
 const publicUrl = process.env.PUBLIC_URL || '';
 const accessToken = process.env.MP_ACCESS_TOKEN?.trim();
+const gameSyncToken = process.env.GAME_SYNC_TOKEN?.trim();
+const rewardsFile = path.join(process.cwd(), 'data', 'rewards.json');
 
 const packages = new Map([
   [500, { gold: 500, price: 5.00 }],
@@ -15,6 +19,19 @@ const packages = new Map([
 
 app.use(express.json());
 app.use(express.static('.'));
+
+async function readRewards() {
+  try {
+    return JSON.parse(await fs.readFile(rewardsFile, 'utf8'));
+  } catch {
+    return [];
+  }
+}
+
+async function saveRewards(rewards) {
+  await fs.mkdir(path.dirname(rewardsFile), { recursive: true });
+  await fs.writeFile(rewardsFile, JSON.stringify(rewards, null, 2));
+}
 
 app.post('/api/create-pix', async (request, response) => {
   if (!accessToken) return response.status(500).json({ error: 'MP_ACCESS_TOKEN não configurado.' });
@@ -74,12 +91,32 @@ app.post('/api/webhook', async (request, response) => {
     const payment = new Payment(client);
     const result = await payment.get({ id: paymentId });
     if (result.status === 'approved') {
-      console.log('Pagamento aprovado. Entrega pendente:', result.external_reference);
-      // Próximo passo: enviar esta recompensa para a fila consumida pelo servidor do jogo.
+      const reference = JSON.parse(result.external_reference || '{}');
+      const rewards = await readRewards();
+      if (!rewards.some(reward => String(reward.paymentId) === String(paymentId))) {
+        rewards.push({
+          paymentId: String(paymentId),
+          orderId: reference.orderId,
+          character: reference.character,
+          gold: Number(reference.gold),
+          status: 'pending',
+          createdAt: new Date().toISOString()
+        });
+        await saveRewards(rewards);
+      }
+      console.log('Pagamento aprovado. Recompensa pendente:', paymentId);
     }
   } catch (error) {
     console.error('Erro ao confirmar pagamento:', error.message);
   }
+});
+
+app.get('/api/rewards', async (request, response) => {
+  if (!gameSyncToken || request.get('x-game-token') !== gameSyncToken) {
+    return response.sendStatus(401);
+  }
+  const rewards = await readRewards();
+  response.json(rewards.filter(reward => reward.status === 'pending'));
 });
 
 app.listen(port, () => console.log(`Site online na porta ${port}`));
