@@ -5,7 +5,7 @@ import { MercadoPagoConfig, Payment } from 'mercadopago';
 const app = express();
 const port = process.env.PORT || 3000;
 const publicUrl = process.env.PUBLIC_URL || '';
-const accessToken = process.env.MP_ACCESS_TOKEN;
+const accessToken = process.env.MP_ACCESS_TOKEN?.trim();
 
 const packages = new Map([
   [500, { gold: 500, price: 5.00 }],
