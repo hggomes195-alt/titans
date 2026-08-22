@@ -10,6 +10,7 @@ const publicUrl = process.env.PUBLIC_URL || '';
 const accessToken = process.env.MP_ACCESS_TOKEN?.trim();
 const gameSyncToken = process.env.GAME_SYNC_TOKEN?.trim();
 const rewardsFile = path.join(process.cwd(), 'data', 'rewards.json');
+const rankingsFile = path.join(process.cwd(), 'data', 'rankings.json');
 
 const packages = new Map([
   [500, { gold: 500, price: 5.00 }],
@@ -31,6 +32,19 @@ async function readRewards() {
 async function saveRewards(rewards) {
   await fs.mkdir(path.dirname(rewardsFile), { recursive: true });
   await fs.writeFile(rewardsFile, JSON.stringify(rewards, null, 2));
+}
+
+async function readRankings() {
+  try {
+    return JSON.parse(await fs.readFile(rankingsFile, 'utf8'));
+  } catch {
+    return { pvp: [], guilds: [], updatedAt: null };
+  }
+}
+
+async function saveRankings(rankings) {
+  await fs.mkdir(path.dirname(rankingsFile), { recursive: true });
+  await fs.writeFile(rankingsFile, JSON.stringify(rankings, null, 2));
 }
 
 app.post('/api/create-pix', async (request, response) => {
@@ -129,6 +143,22 @@ app.post('/api/rewards/:paymentId/claim', async (request, response) => {
   reward.status = 'claimed';
   reward.claimedAt = new Date().toISOString();
   await saveRewards(rewards);
+  response.sendStatus(204);
+});
+
+app.get('/api/rankings', async (request, response) => {
+  response.json(await readRankings());
+});
+
+app.post('/api/rankings/sync', async (request, response) => {
+  if (!gameSyncToken || request.get('x-game-token') !== gameSyncToken) {
+    return response.sendStatus(401);
+  }
+  const { pvp, guilds } = request.body || {};
+  if (!Array.isArray(pvp) || !Array.isArray(guilds)) {
+    return response.status(400).json({ error: 'Formato de ranking inválido.' });
+  }
+  await saveRankings({ pvp: pvp.slice(0, 10), guilds: guilds.slice(0, 10), updatedAt: new Date().toISOString() });
   response.sendStatus(204);
 });
 

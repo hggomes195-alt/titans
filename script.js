@@ -8,6 +8,30 @@ button.addEventListener('click', () => {
 document.querySelectorAll('.nav-links a').forEach(link => link.addEventListener('click', () => navigation.classList.remove('open')));
 document.getElementById('year').textContent = new Date().getFullYear();
 
+function renderRanking(elementId, entries, emptyMessage) {
+  const container = document.getElementById(elementId);
+  if (!entries.length) {
+    container.innerHTML = `<div class="ranking-empty"><strong>${emptyMessage}</strong><span>Os dados serão atualizados pelo servidor do jogo.</span></div>`;
+    return;
+  }
+  container.innerHTML = entries.map((entry, index) => `<div class="ranking-row ranking-row-${index + 1}"><b>${String(index + 1).padStart(2, '0')}</b><span>${entry.name}</span><strong>${entry.score} pts</strong><small>${entry.wins}V / ${entry.losses}D</small></div>`).join('');
+}
+
+async function loadRankings() {
+  try {
+    const response = await fetch('/api/rankings');
+    const data = await response.json();
+    renderRanking('pvp-ranking', data.pvp || [], 'Nenhum jogador ranqueado ainda.');
+    renderRanking('guild-ranking', data.guilds || [], 'Nenhuma guilda ranqueada ainda.');
+  } catch {
+    renderRanking('pvp-ranking', [], 'Ranking temporariamente indisponível.');
+    renderRanking('guild-ranking', [], 'Ranking temporariamente indisponível.');
+  }
+}
+
+loadRankings();
+setInterval(loadRankings, 60000);
+
 document.querySelectorAll('.store-buy').forEach(button => button.addEventListener('click', async () => {
   const character = document.getElementById('character-name').value.trim();
   const email = document.getElementById('buyer-email').value.trim();
