@@ -55,7 +55,11 @@ app.post('/api/create-pix', async (request, response) => {
       qrCodeBase64: result.point_of_interaction?.transaction_data?.qr_code_base64
     });
   } catch (error) {
-    console.error('Erro ao criar Pix:', error.message);
+    console.error('Erro ao criar Pix:', {
+      message: error.message,
+      status: error.status,
+      cause: error.cause
+    });
     response.status(502).json({ error: 'Não foi possível criar o Pix.' });
   }
 });
