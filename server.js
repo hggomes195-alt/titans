@@ -119,4 +119,17 @@ app.get('/api/rewards', async (request, response) => {
   response.json(rewards.filter(reward => reward.status === 'pending'));
 });
 
+app.post('/api/rewards/:paymentId/claim', async (request, response) => {
+  if (!gameSyncToken || request.get('x-game-token') !== gameSyncToken) {
+    return response.sendStatus(401);
+  }
+  const rewards = await readRewards();
+  const reward = rewards.find(item => String(item.paymentId) === String(request.params.paymentId));
+  if (!reward) return response.status(404).json({ error: 'Recompensa não encontrada.' });
+  reward.status = 'claimed';
+  reward.claimedAt = new Date().toISOString();
+  await saveRewards(rewards);
+  response.sendStatus(204);
+});
+
 app.listen(port, () => console.log(`Site online na porta ${port}`));
