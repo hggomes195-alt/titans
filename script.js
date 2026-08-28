@@ -50,7 +50,7 @@ document.querySelectorAll('.store-buy').forEach(button => button.addEventListene
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error || 'Não foi possível gerar o Pix.');
-    result.innerHTML = `<strong>Pix criado!</strong><p>Aponte o app do banco para o QR Code ou copie o código abaixo:</p><img class="pix-qr-code" src="data:image/png;base64,${data.qrCodeBase64 || ''}" alt="QR Code para pagamento Pix"><textarea readonly>${data.qrCode || ''}</textarea><p class="pix-delivery-warning">Depois que o pagamento for aprovado, aguarde alguns segundos, feche o jogo e entre novamente para receber o gift.</p>`;
+    result.innerHTML = `<strong>Pix criado!</strong><p>Aponte o app do banco para o QR Code ou copie o código abaixo:</p><img class="pix-qr-code" src="data:image/png;base64,${data.qrCodeBase64 || ''}" alt="QR Code para pagamento Pix"><textarea readonly>${data.qrCode || ''}</textarea><p class="pix-delivery-warning">Depois que o pagamento for aprovado, aguarde alguns segundos e entre novamente no jogo para receber suas Titan Coins.</p>`;
     requestAnimationFrame(() => result.classList.add('is-visible'));
   } catch (error) {
     result.textContent = error.message;

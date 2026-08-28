@@ -13,9 +13,9 @@ const rewardsFile = path.join(process.cwd(), 'data', 'rewards.json');
 const rankingsFile = path.join(process.cwd(), 'data', 'rankings.json');
 
 const packages = new Map([
-  [500, { gold: 500, price: 5.00 }],
-  [1000, { gold: 1000, price: 10.00 }],
-  [5500, { gold: 5500, price: 50.00 }]
+  [5, { coins: 5, price: 5.00 }],
+  [10, { coins: 10, price: 10.00 }],
+  [50, { coins: 50, price: 50.00 }]
 ]);
 
 app.use(express.json());
@@ -70,10 +70,10 @@ app.post('/api/create-pix', async (request, response) => {
     const result = await payment.create({
       body: {
         transaction_amount: selectedPackage.price,
-        description: `${selectedPackage.gold} Gold - Titans Tatics`,
+        description: `${selectedPackage.coins} Titan Coins - Titans Tatics`,
         payment_method_id: 'pix',
         payer: { email: normalizedEmail },
-        external_reference: JSON.stringify({ orderId, character: normalizedCharacter, gold: selectedPackage.gold }),
+        external_reference: JSON.stringify({ orderId, character: normalizedCharacter, coins: selectedPackage.coins }),
         notification_url: publicUrl ? `${publicUrl}/api/webhook` : undefined
       },
       requestOptions: { idempotencyKey: orderId }
@@ -106,13 +106,18 @@ app.post('/api/webhook', async (request, response) => {
     const result = await payment.get({ id: paymentId });
     if (result.status === 'approved') {
       const reference = JSON.parse(result.external_reference || '{}');
+      const selectedPackage = packages.get(Number(reference.coins));
+      if (!selectedPackage || Number(result.transaction_amount) !== selectedPackage.price) {
+        console.error('Pagamento aprovado com pacote ou valor divergente:', paymentId);
+        return;
+      }
       const rewards = await readRewards();
       if (!rewards.some(reward => String(reward.paymentId) === String(paymentId))) {
         rewards.push({
           paymentId: String(paymentId),
           orderId: reference.orderId,
           character: reference.character,
-          gold: Number(reference.gold),
+          coins: selectedPackage.coins,
           status: 'pending',
           createdAt: new Date().toISOString()
         });
