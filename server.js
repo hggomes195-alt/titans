@@ -15,6 +15,7 @@ const rankingsFile = path.join(process.cwd(), 'data', 'rankings.json');
 const packages = new Map([
   [5, { coins: 5, price: 5.00 }],
   [10, { coins: 10, price: 10.00 }],
+  [30, { coins: 30, price: 30.00 }],
   [50, { coins: 50, price: 50.00 }]
 ]);
 
