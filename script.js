@@ -8,6 +8,25 @@ button.addEventListener('click', () => {
 document.querySelectorAll('.nav-links a').forEach(link => link.addEventListener('click', () => navigation.classList.remove('open')));
 document.getElementById('year').textContent = new Date().getFullYear();
 
+const serverStatus = document.getElementById('server-status');
+
+async function updateServerStatus() {
+  if (!serverStatus) return;
+  try {
+    const response = await fetch('/api/server-status', { cache: 'no-store' });
+    if (!response.ok) throw new Error('Status indisponível');
+    const data = await response.json();
+    serverStatus.className = data.online ? 'is-online' : 'is-offline';
+    serverStatus.textContent = data.online ? '● SERVIDOR ONLINE' : '● SERVIDOR OFFLINE';
+  } catch {
+    serverStatus.className = 'is-offline';
+    serverStatus.textContent = '● SERVIDOR OFFLINE';
+  }
+}
+
+updateServerStatus();
+setInterval(updateServerStatus, 30000);
+
 function renderRanking(elementId, entries, emptyMessage, guildRanking = false) {
   const container = document.getElementById(elementId);
   if (!entries.length) {

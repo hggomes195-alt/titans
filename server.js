@@ -1,5 +1,6 @@
 import crypto from 'node:crypto';
 import fs from 'node:fs/promises';
+import net from 'node:net';
 import path from 'node:path';
 import express from 'express';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
@@ -9,6 +10,9 @@ const port = process.env.PORT || 3000;
 const publicUrl = process.env.PUBLIC_URL || '';
 const accessToken = process.env.MP_ACCESS_TOKEN?.trim();
 const gameSyncToken = process.env.GAME_SYNC_TOKEN?.trim();
+const gameServerHost = process.env.GAME_SERVER_HOST?.trim() || '179.61.185.21';
+const gameServerPort = Number(process.env.GAME_SERVER_PORT || 4457);
+const gameServerTimeoutMs = Number(process.env.GAME_SERVER_TIMEOUT_MS || 2500);
 const rewardsFile = path.join(process.cwd(), 'data', 'rewards.json');
 const rankingsFile = path.join(process.cwd(), 'data', 'rankings.json');
 
@@ -21,6 +25,29 @@ const packages = new Map([
 
 app.use(express.json());
 app.use(express.static('.'));
+
+function checkGameServer() {
+  return new Promise(resolve => {
+    const socket = net.createConnection({ host: gameServerHost, port: gameServerPort });
+    let finished = false;
+    const finish = online => {
+      if (finished) return;
+      finished = true;
+      socket.destroy();
+      resolve(online);
+    };
+    socket.setTimeout(gameServerTimeoutMs);
+    socket.once('connect', () => finish(true));
+    socket.once('timeout', () => finish(false));
+    socket.once('error', () => finish(false));
+  });
+}
+
+app.get('/api/server-status', async (request, response) => {
+  response.set('Cache-Control', 'no-store');
+  const online = await checkGameServer();
+  response.json({ online, checkedAt: new Date().toISOString() });
+});
 
 async function readRewards() {
   try {
