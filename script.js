@@ -1,3 +1,5 @@
+import { publicRankingEntries } from './ranking-public.mjs';
+
 const button = document.querySelector('.menu-button');
 const navigation = document.querySelector('.nav-links');
 button.addEventListener('click', () => {
@@ -29,14 +31,22 @@ setInterval(updateServerStatus, 30000);
 
 function renderRanking(elementId, entries, emptyMessage, guildRanking = false) {
   const container = document.getElementById(elementId);
+  entries = publicRankingEntries(entries);
   if (!entries.length) {
     container.innerHTML = `<div class="ranking-empty"><strong>${emptyMessage}</strong><span>Os dados serão atualizados pelo servidor do jogo.</span></div>`;
     return;
   }
-  container.innerHTML = entries.map((entry, index) => {
+  container.replaceChildren(...entries.map((entry, index) => {
     const details = guildRanking ? `Líder: ${entry.leader || 'Não informado'} · Forte: ${entry.fort || 'Nenhum forte'}` : `${entry.wins || 0} vitórias PvP · Guilda: ${entry.guild || 'Sem guilda'}`;
-    return `<div class="ranking-row ranking-row-${index + 1}"><b>${String(index + 1).padStart(2, '0')}</b><span>${guildRanking ? entry.name : entry.player || entry.name}</span><strong>${entry.score || 0} pts</strong><small>${details}</small></div>`;
-  }).join('');
+    const row = document.createElement('div');
+    row.className = `ranking-row ranking-row-${index + 1}`;
+    for (const [tag, text] of [['b', String(index + 1).padStart(2, '0')], ['span', guildRanking ? entry.name : entry.player || entry.name], ['strong', `${entry.score || 0} pts`], ['small', details]]) {
+      const node = document.createElement(tag);
+      node.textContent = text || '';
+      row.append(node);
+    }
+    return row;
+  }));
 }
 
 async function loadRankings() {

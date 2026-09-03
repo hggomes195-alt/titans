@@ -3,6 +3,7 @@ import fs from 'node:fs/promises';
 import net from 'node:net';
 import path from 'node:path';
 import express from 'express';
+import { sanitizeRankings } from './ranking-public.mjs';
 import { MercadoPagoConfig, Payment } from 'mercadopago';
 
 const app = express();
@@ -180,7 +181,8 @@ app.post('/api/rewards/:paymentId/claim', async (request, response) => {
 });
 
 app.get('/api/rankings', async (request, response) => {
-  response.json(await readRankings());
+  response.set('Cache-Control', 'no-store');
+  response.json(sanitizeRankings(await readRankings()));
 });
 
 app.post('/api/rankings/sync', async (request, response) => {
@@ -191,7 +193,8 @@ app.post('/api/rankings/sync', async (request, response) => {
   if (!Array.isArray(pvp) || !Array.isArray(guilds)) {
     return response.status(400).json({ error: 'Formato de ranking inválido.' });
   }
-  await saveRankings({ pvp: pvp.slice(0, 10), guilds: guilds.slice(0, 10), updatedAt: new Date().toISOString() });
+  const clean = sanitizeRankings({ pvp, guilds });
+  await saveRankings({ pvp: clean.pvp.slice(0, 10), guilds: clean.guilds.slice(0, 10), updatedAt: new Date().toISOString() });
   response.sendStatus(204);
 });
 
