@@ -1,3 +1,4 @@
+const english = document.documentElement?.lang?.startsWith('en');
 const menuButton = document.querySelector('.menu-button');
 const navigation = document.getElementById('wiki-nav');
 const search = document.getElementById('wiki-search');
@@ -32,7 +33,7 @@ function filterWiki() {
     if (visible) matches += 1;
   });
   noResults.hidden = matches !== 0;
-  status.textContent = query ? `${matches} capítulo${matches === 1 ? '' : 's'} encontrado${matches === 1 ? '' : 's'} para “${search.value.trim()}”.` : `Explore os ${sections.length} capítulos do guia.`;
+  status.textContent = english ? (query ? `${matches} chapter${matches === 1 ? '' : 's'} found for “${search.value.trim()}”.` : `Explore all ${sections.length} guide chapters.`) : query ? `${matches} capítulo${matches === 1 ? '' : 's'} encontrado${matches === 1 ? '' : 's'} para “${search.value.trim()}”.` : `Explore os ${sections.length} capítulos do guia.`;
 }
 
 function clearSearch() { search.value = ''; filterWiki(); }
